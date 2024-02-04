@@ -7,13 +7,35 @@ use App\Resource;
 class ResourceMaker
 {
 	public Resource $resource;
+
 	public function __construct(Resource $resource)
 	{
 		$this->resource = $resource;
 	}
 
+	public  function createValForConstruct():string
+	{
+		$properties = $this->resource->properties->properties;
+
+		$text = '';
+		foreach($properties as $property) {
+			$text = sprintf('%s%s %s = null,%s', $text, $property->type->value, $property->propertyName, "\n");
+		}
+		return $text;
+
+
+	}
+
+
 	public function createConstruct(): string
 	{
+		$result = <<< EOD
+			public function __construct(
+				%s
+			){
+
+			}
+		EOD;
 
 	}
 

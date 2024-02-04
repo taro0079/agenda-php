@@ -3,6 +3,7 @@
 require 'vendor/autoload.php';
 use Symfony\Component\Yaml\Yaml;
 use App\Resource;
+use App\ResourceMaker;
 
 $data = Yaml::parseFile("./test.yaml");
 
@@ -33,7 +34,8 @@ foreach ($paths as $value) {
 	}
 	$resources[] = $resource;
 }
-var_dump($resources);
+$maker = new ResourceMaker($resources[0]);
+var_dump($maker->createValForConstruct());
 //$resources[0]->writeResourceFile('test.txt');
 
 
