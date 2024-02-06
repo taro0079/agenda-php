@@ -16,9 +16,9 @@ class Resource
 	{
 		$result = [];
 		foreach ($properties as $key => $value) {
-			$property = new Property();
-			$property->propertyName = $key;
-			$property->setType($value['type']);
+            $propertyName = $key;
+            $propertyType = $value['type'];
+            $property = Property::create(propertyName: $propertyName, type: $propertyType);
 			$result[] = $property;
 		}
 		$this->properties = PropertyCollection::createFromArray($result);
