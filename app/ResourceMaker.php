@@ -13,17 +13,15 @@ class ResourceMaker
 		$this->resource = $resource;
 	}
 
-	public  function createValForConstruct():string
+	public  function createValForConstruct(): string
 	{
 		$properties = $this->resource->properties->properties;
 
 		$text = '';
-		foreach($properties as $property) {
+		foreach ($properties as $property) {
 			$text = sprintf('%s%s %s = null,%s', $text, $property->type->value, $property->propertyName, "\n");
 		}
 		return $text;
-
-
 	}
 
 
@@ -36,16 +34,15 @@ class ResourceMaker
 
 			}
 		EOD;
-
+		return $result;
 	}
 
-	public function createValuesText():string
+	public function createValuesText(): string
 	{
 		$result = '';
-		foreach($this->resource->properties->properties as $property)
-		{
+		foreach ($this->resource->properties->properties as $property) {
 			$text = $property->createMemberValText();
-			$result = sprintf('%s%s%s%s', $result, $text,"\n", "\n");
+			$result = sprintf('%s%s%s%s', $result, $text, "\n", "\n");
 		}
 		return $result;
 	}
@@ -55,7 +52,7 @@ class ResourceMaker
 		$content =  <<< EOD
 			#[ApiResource(
 				operations: []
-				)	
+				)
 			]
 			class Test
 			{
@@ -66,7 +63,5 @@ class ResourceMaker
 		EOD;
 		$content = sprintf($content, $this->createValuesText());
 		file_put_contents($fileName, $content);
-		
 	}
-
 }

@@ -25,7 +25,7 @@ foreach ($paths as $value) {
     foreach ($info as $key => $value) {
         $method = $key;
         $resource->setMethod($method);
-        if ($method !== "get") {
+        if ($method !== "post") {
             return;
         }
 
@@ -38,6 +38,5 @@ foreach ($paths as $value) {
     }
     $resources[] = $resource;
 }
-$maker = new ResourceMaker($resources[0]);
-var_dump($maker->createValForConstruct());
+// $maker = new ResourceMaker($resources[0]);
 //$resources[0]->writeResourceFile('test.txt');
