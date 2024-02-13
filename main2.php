@@ -7,16 +7,37 @@ use Symfony\Component\Yaml\Yaml;
 use function _\map;
 
 
-function createClassTemplate(Resource $info): string
+class ClassCreatorCommand
 {
-    $path = $info->path;
-    $className = ResourceCommand::generateClassName($info);
-    $memberProps = ResourceCommand::createMemberProps($info);
-    $constructor = ResourceCommand::createConstructor($info);
-    $text = "<?php\n//endpoint: %s\nclass %s\n{\n%s\n%s}";
-    return sprintf($text, $path, $className, $memberProps, $constructor);
-};
+    public static function createClassTemplate(Resource $info): string
+    {
+        $path = $info->path;
+        $className = ResourceCommand::generateClassName($info);
+        $memberProps = ResourceCommand::createMemberProps($info);
+        $constructor = ResourceCommand::createConstructor($info);
+        $text = "<?php\n//endpoint: %s\n//%s resource class\nclass %s\n{\n%s\n%s}";
+        return sprintf($text, $path, $info->schemaType, $className, $memberProps, $constructor);
+    }
 
+    public static function createClassFile(ClassCreator $class): void
+    {
+        file_put_contents($class->fileName, $class->content);
+    }
+}
+
+
+class ClassCreator
+{
+    public string $className;
+    public string $fileName;
+    public string $content;
+    public function __construct(Resource $resource)
+    {
+        $this->className = ResourceCommand::generateClassName($resource);
+        $this->content = ClassCreatorCommand::createClassTemplate($resource);
+        $this->fileName = ResourceCommand::generateFileName($resource);
+    }
+}
 
 function typeConverter(string $type): string
 {
@@ -35,8 +56,15 @@ class ResourceCommand
     {
         $path = $resource->path;
         $parts = preg_split('/[\/\-]/', $path);
+        $parts = array_merge($parts, [ $resource->schemaType ]);
         $parts = map($parts, fn ($part) => ucfirst($part));
         return implode('', $parts);
+    }
+
+    public static function generateFileName(Resource $resource): string
+    {
+        $className = self::generateClassName($resource);
+        return sprintf('%s.php',$className);
     }
 
     public static function createMemberProps(Resource $info): string
@@ -52,7 +80,7 @@ class ResourceCommand
     }
     public static function createConstructor(Resource $info): string
     {
-        $text = "public function __constructor(\n%s\n){\n%s\n}\n";
+        $text = "public function __construct(\n%s\n){\n%s\n}\n";
         $args = self::createArgForConstructor($info);
         $body = self::createConstructorBody($info);
         return sprintf($text, $args, $body);
@@ -174,6 +202,16 @@ foreach ($paths as $key => $path) {
     $ep = $key;
     $method = key($path);
 
+
+    $responseBody = $path[$method]['responses'];
+    $isStatusOk = isExsistStatusOk($responseBody);
+    if ($isStatusOk === false) {
+        continue;
+    }
+    var_dump($responseBody['200']['content']['application/json']['schema']);
+    $responseProps = $responseBody['200']['content']['application/json']['schema']['properties'];
+    $result = createPostResponse(statusCode: 200, properties: $responseProps, endPoint: $ep);
+
     if ($method !== 'post') {
         continue;
     }
@@ -181,14 +219,6 @@ foreach ($paths as $key => $path) {
     // Request
     $props = $path[$method]['requestBody']['content']['application/json']['schema']['properties'];
     $info = createPostRequest(endPoint: $ep, method: $method, properties: $props);
-
-    $responseBody = $path[$method]['responses'];
-    $isStatusOk = isExsistStatusOk($responseBody);
-    if ($isStatusOk === false) {
-        continue;
-    }
-    $responseProps = $responseBody['200']['content']['application/json']['schema']['properties'];
-    $result = createPostResponse(statusCode: 200, properties: $responseProps, endPoint: $ep);
     $responses[] = $result;
     $infos[] = $info;
 }
@@ -197,7 +227,7 @@ $f = function ($info) {
     if (null === $info) {
         return;
     }
-    return createClassTemplate($info);
+    return new ClassCreator($info);
 };
-$classes = array_map($f, $all);
-var_dump($classes);
+$classes = map($all, $f);
+map($classes, fn(ClassCreator $class) => ClassCreatorCommand::createClassFile($class));
