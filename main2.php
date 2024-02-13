@@ -104,12 +104,42 @@ function createPostResponse(string $statusCode, array $properties, string $endPo
 		}
 		$resultProperties[] = ["name" => $key, "type" => typeConverter($props['type'])];
 	}
-	return [
+
+	$result = [
 		"schemaType" => "response",
 		"path" => $endPoint,
 		"statusCode" => $statusCode,
 		"properties" => $resultProperties,
 	];
+	return $result;
+}
+
+function extractProperties(array $requestBody, string $endPoint): array
+{
+	$response = [];
+	foreach ($requestBody as $key => $value) {
+		$statusCode = $key;
+
+		if ($statusCode !== 200) {
+			continue;
+		}
+
+		$properties = $value['content']['application/json']['schema']['properties'];
+		$result = createPostResponse(statusCode: $statusCode, properties: $properties, endPoint: $endPoint);
+		$response[] = $result;
+	}
+	return $response;
+}
+
+function isExsistStatusOk(array $responseBody): bool
+{
+	foreach ($responseBody as $key => $value) {
+		$statusCode = $key;
+		if ($statusCode === 200) {
+			return true;
+		}
+	}
+	return false;
 }
 
 $data = Yaml::parseFile("./order.yaml");
@@ -135,31 +165,21 @@ foreach ($paths as $key => $path) {
 	$info = createPostRequest(endPoint: $ep, method: $method, properties: $props);
 
 	$responseBody = $path[$method]['responses'];
-	$response = [];
-	foreach ($responseBody as $key => $value) {
-		$statusCode = $key;
-		if ($statusCode !== 200) {
-			continue;
-		}
-		$properties = $value['content']['application/json']['schema']['properties'];
-		$result = createPostResponse(statusCode: $statusCode, properties: $properties, endPoint: $ep);
-		$response[] = $result;
+	$isStatusOk = isExsistStatusOk($responseBody);
+	if ($isStatusOk === false) {
+		continue;
 	}
-	// $response = array_map($f, array_keys($responseBody), array_values($responseBody));
-	// var_dump($response);
-	$responses[] = $response;
+	$responseProps = $responseBody['200']['content']['application/json']['schema']['properties'];
+	$result = createPostResponse(statusCode: 200, properties: $responseProps, endPoint: $ep);
+	$responses[] = $result;
 	$infos[] = $info;
 }
-$f = fn ($info) => createClassTemplate($info);
-$classes = array_map($f, $infos);
-
-$res = [];
-foreach (array_filter($responses) as $key => $value) {
-	$res[] = array_merge([], ...$value);
-}
-$res = array_merge($res, $infos);
-var_dump(array_map($f, $res));
-
-// TODO
-// リクエストとレスポンスを判定できるようにする
-// request or response, path, propertiesを格納できるクラスを作成する
+$all = [...$responses, ...$infos];
+$f = function ($info) {
+	if (null === $info) {
+		return;
+	}
+	return createClassTemplate($info);
+};
+$classes = array_map($f, $all);
+var_dump($classes);
