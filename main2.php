@@ -152,11 +152,11 @@ function createPostResponse(string $statusCode, array $properties, string $endPo
     }
 
     $result = new Resource(
+        properties: $resultProperties,
+        path: $endPoint,
         schemaType: "response",
         method: 'post',
-        path: $endPoint,
-        statusCode: $statusCode,
-        properties: $resultProperties
+        statusCode: $statusCode
     );
     return $result;
 }
