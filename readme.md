@@ -23,7 +23,7 @@ swagger-merger -i ../rpst-oms-backend/doc/spec/api/admin/hoge/index.yaml -o targ
 ```
 2. 以下コマンドを実行する
 ```shell
-php main2.php 
+php main.php 
 ```
 3. Resourceファイル群が生成されます
 
