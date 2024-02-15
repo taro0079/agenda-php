@@ -41,6 +41,7 @@ class ClassCreator
 
 function typeConverter(string $type): string
 {
+    var_dump($type);
     return match ($type) {
         "integer" => "int",
         "object" => "array",
@@ -188,7 +189,7 @@ function isExsistStatusOk(array $responseBody): bool
     return false;
 }
 
-$data = Yaml::parseFile("./order.yaml");
+$data = Yaml::parseFile("./shipping.yaml");
 
 $paths = null;
 foreach ($data as $key => $value) {
@@ -203,6 +204,7 @@ foreach ($paths as $key => $path) {
     $method = key($path);
 
 
+    // Response
     $responseBody = $path[$method]['responses'];
     $isStatusOk = isExsistStatusOk($responseBody);
     if ($isStatusOk === false) {
@@ -211,12 +213,26 @@ foreach ($paths as $key => $path) {
     if (!isset($responseBody['200']['content'])){
         continue;
     }
+
     if (isset($responseBody['200']['content']['application/json']['schema']['allOf'])) {
+        $data = $responseBody['200']['content']['application/json']['schema']['allOf'];
+        $responseProps = [];
+        foreach ($data as $d) {;
+            $responseProps = array_merge($responseProps, $d['properties']);
+        }
+    }
+
+    if (isset($responseBody['200']['content']['application/json']['schema']['properties'])) {
+        $responseProps = $responseBody['200']['content']['application/json']['schema']['properties'];
+    }
+
+    if (null === $responseProps) {
         continue;
     }
 
-    $responseProps = $responseBody['200']['content']['application/json']['schema']['properties'];
     $result = createPostResponse(statusCode: 200, properties: $responseProps, endPoint: $ep);
+
+    $responses[] = $result;
 
     if ($method !== 'post') {
         continue;
@@ -225,7 +241,6 @@ foreach ($paths as $key => $path) {
     // Request
     $props = $path[$method]['requestBody']['content']['application/json']['schema']['properties'];
     $info = createPostRequest(endPoint: $ep, method: $method, properties: $props);
-    $responses[] = $result;
     $infos[] = $info;
 }
 $all = [...$responses, ...$infos];
