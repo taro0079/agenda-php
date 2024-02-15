@@ -1,4 +1,4 @@
-# Agenda
+# Agenda (Auto GENerator from Document of Api)
 ## これはなに？
 open api (swagger) のyaml定義からResourceファイルを生成するツールです。
 
