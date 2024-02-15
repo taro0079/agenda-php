@@ -41,7 +41,6 @@ class ClassCreator
 
 function typeConverter(string $type): string
 {
-    var_dump($type);
     return match ($type) {
         "integer" => "int",
         "object" => "array",
