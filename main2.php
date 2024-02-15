@@ -208,7 +208,13 @@ foreach ($paths as $key => $path) {
     if ($isStatusOk === false) {
         continue;
     }
-    var_dump($responseBody['200']['content']['application/json']['schema']);
+    if (!isset($responseBody['200']['content'])){
+        continue;
+    }
+    if (isset($responseBody['200']['content']['application/json']['schema']['allOf'])) {
+        continue;
+    }
+
     $responseProps = $responseBody['200']['content']['application/json']['schema']['properties'];
     $result = createPostResponse(statusCode: 200, properties: $responseProps, endPoint: $ep);
 
