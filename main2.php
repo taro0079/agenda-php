@@ -188,7 +188,7 @@ function isExsistStatusOk(array $responseBody): bool
     return false;
 }
 
-$data = Yaml::parseFile("./shipping.yaml");
+$data = Yaml::parseFile("./target.yaml");
 
 $paths = null;
 foreach ($data as $key => $value) {
