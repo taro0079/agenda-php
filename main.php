@@ -209,9 +209,7 @@ foreach ($paths as $key => $path) {
     if ($isStatusOk === false) {
         continue;
     }
-    if (!isset($responseBody['200']['content'])){
-        continue;
-    }
+
 
     if (isset($responseBody['200']['content']['application/json']['schema']['allOf'])) {
         $data = $responseBody['200']['content']['application/json']['schema']['allOf'];
@@ -225,18 +223,18 @@ foreach ($paths as $key => $path) {
         $responseProps = $responseBody['200']['content']['application/json']['schema']['properties'];
     }
 
-    if (null === $responseProps) {
-        continue;
+    if (null !== $responseProps) {
+        $result = createPostResponse(statusCode: 200, properties: $responseProps, endPoint: $ep);
     }
 
-    $result = createPostResponse(statusCode: 200, properties: $responseProps, endPoint: $ep);
 
     $responses[] = $result;
 
-    if ($method !== 'post') {
+
+    var_dump($path[$method]['summary']);
+    if (!isset($path[$method]['requestBody']['content']['application/json'])) {
         continue;
     }
-
     // Request
     $props = $path[$method]['requestBody']['content']['application/json']['schema']['properties'];
     $info = createPostRequest(endPoint: $ep, method: $method, properties: $props);
